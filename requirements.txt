@@ -1,0 +1,16 @@
+# LangGraph / LangChain（对齐 V1 正式版）
+langgraph>=1.2.11
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langgraph-checkpoint>=2.0.0
+langgraph-checkpoint-sqlite>=2.0.0
+
+# Tools & LLM
+langchain-tavily>=0.1.0
+tavily-python>=0.5.0
+
+# Config
+python-dotenv>=1.0.1
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
