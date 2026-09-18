@@ -17,3 +17,6 @@ pydantic-settings>=2.6.0
 
 # Tests
 pytest>=8.0.0
+
+# Web
+streamlit>=1.40.0
