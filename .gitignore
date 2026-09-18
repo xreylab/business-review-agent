@@ -40,6 +40,9 @@ htmlcov/
 # Generated reports
 output/*.md
 
+# Personal / interview notes
+面试准备.md
+
 # OS
 .DS_Store
 Thumbs.db

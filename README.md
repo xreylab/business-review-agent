@@ -86,6 +86,41 @@ flowchart TD
     human_review -->|确认通过| END([END])
 ```
 
+### 全流程协作图
+
+State 是共享黑板：节点读写字段，边只读字段、不改字段。Prompt 只挂在会调 LLM 的节点上。
+
+```mermaid
+flowchart TD
+    START([START]) --> D
+
+    D["节点 decompose"]
+    D --> DP["Prompt：decompose_prompt<br/>读 user_query → 产出可检索问句"]
+    DP -->|写入 task_list| S
+
+    S["节点 search<br/>无 Prompt，直接调 Tavily"]
+    S -->|写入 search_results| W
+
+    W["节点 write_report"]
+    W --> WP["Prompt：write_report_prompt<br/>读 user_query / task_list / search_results<br/>返工时再读 review_comments"]
+    WP -->|写入 report<br/>若上轮不合格则 retry_count + 1| R
+
+    R["节点 review"]
+    R --> RP["Prompt：review_prompt<br/>读 user_query / search_results / report<br/>强制输出 结论：合格或不合格"]
+    RP -->|写入 review_comments| E1
+
+    E1{"边 route_after_review<br/>读 review_comments 与 retry_count"}
+    E1 -->|不合格且 retry 小于 2| W
+    E1 -->|合格或已达上限| H
+
+    H["节点 human_review<br/>无业务 Prompt：人 / Web 表单"]
+    H -->|写入 human_decision<br/>改稿则同时更新 report| E2
+
+    E2{"边 route_after_human_review<br/>读 human_decision"}
+    E2 -->|revise 再质检| R
+    E2 -->|approve| END([END])
+```
+
 ### 分层说明
 
 | 层 | 职责 |
