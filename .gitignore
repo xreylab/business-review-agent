@@ -37,6 +37,9 @@ checkpoints/
 .coverage
 htmlcov/
 
+# Generated reports
+output/*.md
+
 # OS
 .DS_Store
 Thumbs.db

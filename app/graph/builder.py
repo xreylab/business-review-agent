@@ -5,6 +5,7 @@ from __future__ import annotations
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Checkpointer
 
 from app.graph.edges import (
     ROUTE_HUMAN_REVIEW,
@@ -26,13 +27,21 @@ from app.graph.state import AgentState
 CompiledReviewGraph = CompiledStateGraph[AgentState]
 
 
-def build_graph() -> CompiledReviewGraph:
+def build_graph(
+    *,
+    checkpointer: Checkpointer | None = None,
+    interrupt_before: list[str] | None = None,
+    interrupt_after: list[str] | None = None,
+) -> CompiledReviewGraph:
     """构建并编译业务复盘 Agent 图（LangGraph V1）。
 
     流转保持不变：
     START → decompose → search → write_report → review
          不合格且 retry_count < 2 ↺ write_report
          合格 / 达最大重试 → human_review → END 或回 review
+
+    checkpointer 默认 InMemorySaver；CLI 可注入 SqliteSaver 以跨进程恢复 thread_id。
+    interrupt_before / interrupt_after 供 HITL 断点测试与人工介入暂停。
     """
 
     workflow: StateGraph[AgentState] = StateGraph(AgentState)
@@ -70,11 +79,13 @@ def build_graph() -> CompiledReviewGraph:
         },
     )
 
-    # InMemorySaver：V1 官方内存 checkpoint（MemorySaver 仅为向后兼容别名）
-    checkpointer = InMemorySaver()
+    # 未注入时使用 InMemorySaver；CLI 可换成 SqliteSaver 做断点续跑
+    saver = checkpointer if checkpointer is not None else InMemorySaver()
     return workflow.compile(
-        checkpointer=checkpointer,
+        checkpointer=saver,
         name="business-review-agent",
+        interrupt_before=interrupt_before,
+        interrupt_after=interrupt_after,
     )
 
 
